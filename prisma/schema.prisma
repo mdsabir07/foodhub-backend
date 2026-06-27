@@ -16,39 +16,123 @@ datasource db {
 // 1. SIMPLE USER PLACEHOLDER (For now)
 // ==========================================
 model User {
-  id String @id @default(cuid(2))
-  email String @unique
-  name String?
-  role ROLE @default(CUSTOMER)
+  id        String   @id @default(cuid(2))
+  email     String   @unique
+  name      String?
+  role      Role     @default(CUSTOMER)
   createdAt DateTime @default(now())
 
   // Relations
+  meals   Meal[]
+  orders  Order[]
+  reviews Review[]
 }
 
 // ==========================================
 // 2. CATEGORIES (Food types like Burgers, Pizza)
 // ==========================================
 model Category {
-  id String @id @default(cuid(2))
-  name String @unique
-  slug String @unique
-  meals
+  id        String   @id @default(cuid(2))
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  meals Meal[]
+
+  // PERFORMANCE INDEXES:
+  @@index([slug]) // Indexing the slug because users will search/filter categories via URLs like /meals?category=burgers
 }
 
 // ==========================================
 // 3. MEALS (Menu items created by providers)
 // ==========================================
 model Meal {
-  id String @id @default(cuid(2))
-  name String
+  id          String   @id @default(cuid(2))
+  name        String
   description String
-  price Float
-  image String?
-  isAvailable Boolean @default(true)
+  price       Float
+  image       String?
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
+  // Relations
+  categoryId String
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  userId     String
+  provider   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  // PERFORMANCE INDEXES:
+  @@index([categoryId])
+  @@index([userId])
+  @@index([isAvailable])
+  @@map("meals")
 }
 
-enum ROLE {
+// ==========================================
+// 4. ORDERS (Customer purchase records)
+// ==========================================
+model Order {
+  id              String      @id @default(cuid(2))
+  deliveryAddress String
+  totalAmount     Float
+  status          OrderStatus @default(PLACED)
+  createdAt       DateTime    @default(now())
+
+  // Relations
+  customerId String
+  customer   User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  // PERFORMANCE INDEXES:
+  @@index([customerId])
+  @@index([status])
+  @@map("orders")
+}
+
+// ==========================================
+// 5. ORDER ITEMS (Join table for receipt history)
+// ==========================================
+model OrderItem {
+  id       String @id @default(cuid(2))
+  quantity Int
+  price    Float // Stores the price at the exact moment of order execution
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  mealId  String
+  meal    Meal   @relation(fields: [mealId], references: [id], onDelete: Restrict)
+
+  // PERFORMANCE INDEXES:
+  @@index([orderId])
+  @@index([mealId])
+  @@map("order_items")
+}
+
+// ==========================================
+// 6. REVIEWS (Customer ratings for meals)
+// ==========================================
+model Review {
+  id        String   @id @default(cuid(2))
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  customerId String
+  customer   User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  mealId     String
+  meal       Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  // PERFORMANCE INDEXES:
+  @@index([customerId])
+  @@index([mealId])
+  @@map("reviews")
+}
+
+enum Role {
   CUSTOMER
   PROVIDER
   ADMIN
