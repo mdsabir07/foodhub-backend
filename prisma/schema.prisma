@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// 1. SIMPLE USER PLACEHOLDER (For now)
+// ==========================================
+model User {
+  id String @id @default(cuid(2))
+  email String @unique
+  name String?
+  role ROLE @default(CUSTOMER)
+  createdAt DateTime @default(now())
+
+  // Relations
+}
+
+// ==========================================
+// 2. CATEGORIES (Food types like Burgers, Pizza)
+// ==========================================
+model Category {
+  id String @id @default(cuid(2))
+  name String @unique
+  slug String @unique
+  meals
+}
+
+// ==========================================
+// 3. MEALS (Menu items created by providers)
+// ==========================================
+model Meal {
+  id String @id @default(cuid(2))
+  name String
+  description String
+  price Float
+  image String?
+  isAvailable Boolean @default(true)
+
+}
+
+enum ROLE {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum OrderStatus {
+  PLACED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELED
+}
