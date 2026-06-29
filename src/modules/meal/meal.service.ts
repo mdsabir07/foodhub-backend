@@ -10,6 +10,23 @@ export class MealService {
         categoryId: string;
         userId: string;
     }) {
+        const { categoryId, userId } = mealData;
+
+        const [category, user] = await Promise.all([
+            prisma.category.findUnique({
+                where: { id: categoryId },
+                select: { id: true },
+            }),
+            prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true },
+            }),
+        ]);
+
+        if (!category || !user) {
+            throw new Error("Invalid categoryId or userId. Make sure the referenced category and user exist.");
+        }
+
         return await prisma.meal.create({
             data: mealData,
         });

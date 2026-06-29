@@ -16,20 +16,76 @@ datasource db {
 // 1. SIMPLE USER PLACEHOLDER (For now)
 // ==========================================
 model User {
-  id        String   @id @default(cuid(2))
-  email     String   @unique
-  name      String?
-  role      Role     @default(CUSTOMER)
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid(2))
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  name          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  role          Role     @default(CUSTOMER)
 
   // Relations
-  meals   Meal[]
-  orders  Order[]
-  reviews Review[]
+  meals    Meal[]
+  orders   Order[]
+  reviews  Review[]
+  sessions Session[]
+  accounts Account[]
 }
 
 // ==========================================
-// 2. CATEGORIES (Food types like Burgers, Pizza)
+// Session model for Better Auth
+// ==========================================
+model Session {
+  id        String   @id @default(cuid(2))
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ==========================================
+// Account model for Better Auth
+// ==========================================
+model Account {
+  id                    String   @id @default(cuid(2))
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  String?
+  refreshTokenExpiresAt String?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ==========================================
+// Verification model for Better Auth
+// ==========================================
+model Verification {
+  id         String   @id @default(cuid(2))
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ==========================================
+// CATEGORIES (Food types like Burgers, Pizza)
 // ==========================================
 model Category {
   id        String   @id @default(cuid(2))

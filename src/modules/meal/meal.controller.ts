@@ -10,25 +10,32 @@ export class MealController {
             const { name, description, price, image, categoryId, userId } = req.body;
 
             // basic validation 
-            if (!name || !price || !categoryId || !userId) {
-                res.status(400).json({ message: "Missing required fields" });
+            if (!name || !description || price === undefined || !categoryId || !userId) {
+                res.status(400).json({ success: false, message: "Missing required fields" });
+                return;
+            }
+
+            const parsedPrice = Number(price);
+            if (Number.isNaN(parsedPrice)) {
+                res.status(400).json({ success: false, message: "Price must be a valid number" });
                 return;
             }
 
             const meal = await mealService.createMeal({
-                name, description, price: Number(price), image, categoryId, userId
+                name, description, price: parsedPrice, image, categoryId, userId
             });
 
             res.status(201).json({ success: true, data: meal });
         } catch (error: any) {
-            res.status(500).json({ success: false, error: error.meal })
+            console.error("❌ BACKEND ERROR:", error);
+            res.status(400).json({ success: false, error: error.message || "Failed to create meal" });
         }
     }
 
     // getting all meals with filter parsing
     async getAll(req: Request, res: Response) {
         try {
-            const { categoryId, available, search } = req.body;
+            const { categoryId, available, search } = req.query;
 
             const meals = await mealService.getAllMeals({
                 categoryId: categoryId as string,
@@ -38,6 +45,7 @@ export class MealController {
 
             res.status(200).json({ success: true, data: meals })
         } catch (error: any) {
+            console.error("❌ BACKEND ERROR:", error);
             res.status(500).json({ success: false, error: error.message });
         }
     }
