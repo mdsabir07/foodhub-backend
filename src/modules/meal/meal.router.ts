@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { MealController } from "./meal.controller";
+import { requireAuth } from "../../middleware/auth.middleware";
 
 const router = Router();
 const mealController = new MealController();
@@ -9,6 +10,6 @@ router.get("/", mealController.getAll);
 router.get("/:id", mealController.getById);
 
 // Provider Route (Will secure later with Better Auth authentication middleware)
-router.post("/", mealController.createMeal);
+router.post("/", requireAuth, mealController.createMeal);
 
 export const mealRoutes: Router = router;
