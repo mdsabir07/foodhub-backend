@@ -1,16 +1,19 @@
 import { Request, Response } from "express";
-import { MealService } from "./meal.service";
-
-const mealService = new MealService();
+import { AuthenticatedRequest } from "../../middleware/auth.middleware";
+import { mealService } from "./meal.service";
 
 export class MealController {
     // Handle creating a meal
-    async createMeal(req: Request, res: Response) {
+    async createMeal(req: AuthenticatedRequest, res: Response) {
         try {
-            const { name, description, price, image, categoryId, userId } = req.body;
+            const { name, description, price, image, categoryId } = req.body;
+
+            if (!req.user) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
 
             // basic validation 
-            if (!name || !description || price === undefined || !categoryId || !userId) {
+            if (!name || !description || price === undefined || !categoryId) {
                 res.status(400).json({ success: false, message: "Missing required fields" });
                 return;
             }
@@ -22,7 +25,7 @@ export class MealController {
             }
 
             const meal = await mealService.createMeal({
-                name, description, price: parsedPrice, image, categoryId, userId
+                name, description, price: parsedPrice, image, categoryId, userId: req.user.id
             });
 
             res.status(201).json({ success: true, data: meal });
@@ -37,9 +40,14 @@ export class MealController {
         try {
             const { categoryId, available, search } = req.query;
 
+            // 🧠 Strict boolean check: only filter if explicitly passed as "true" or "false"
+            let isAvailable: boolean | undefined = undefined;
+            if (available === "true") isAvailable = true;
+            else if (available === "false") isAvailable = false;
+
             const meals = await mealService.getAllMeals({
                 categoryId: categoryId as string,
-                isAvailable: available ? available === "true" : undefined,
+                isAvailable,
                 search: search as string
             });
 
@@ -72,3 +80,5 @@ export class MealController {
         }
     }
 }
+
+export const mealController = new MealController();

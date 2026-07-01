@@ -31,6 +31,7 @@ model User {
   reviews  Review[]
   sessions Session[]
   accounts Account[]
+  cart     Cart?
 }
 
 // ==========================================
@@ -100,7 +101,7 @@ model Category {
 }
 
 // ==========================================
-// 3. MEALS (Menu items created by providers)
+// MEALS (Menu items created by providers)
 // ==========================================
 model Meal {
   id          String   @id @default(cuid(2))
@@ -118,6 +119,7 @@ model Meal {
   provider   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
   reviews    Review[]
+  cartItems  CartItem[]
 
   // PERFORMANCE INDEXES:
   @@index([categoryId])
@@ -127,7 +129,38 @@ model Meal {
 }
 
 // ==========================================
-// 4. ORDERS (Customer purchase records)
+// Cart
+// ==========================================
+model Cart {
+  id     String @id @default(cuid(2))
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  cartItems CartItem[]
+}
+
+// ==========================================
+// Cart Items
+// ==========================================
+model CartItem {
+  id        String   @id @default(cuid(2))
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  mealId    String
+  meal      Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, mealId])
+  @@index([cartId])
+  @@index([mealId])
+}
+
+// ==========================================
+// ORDERS (Customer purchase records)
 // ==========================================
 model Order {
   id              String      @id @default(cuid(2))

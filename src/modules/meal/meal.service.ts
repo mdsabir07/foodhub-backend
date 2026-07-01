@@ -74,3 +74,5 @@ export class MealService {
         });
     }
 }
+
+export const mealService = new MealService();
