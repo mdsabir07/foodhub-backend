@@ -2,6 +2,8 @@ import express, { Application } from "express";
 import { mealRoutes } from "./modules/meal/meal.router";
 import { auth } from "./lib/auth";
 import { toNodeHandler } from "better-auth/node";
+import { cartRoutes } from "./modules/cart/cart.router";
+import { orderRoutes } from "./modules/order/order.router";
 
 const app: Application = express();
 
@@ -15,7 +17,13 @@ app.get("/", (_req, res) => {
   res.json({ message: "FoodHub API is running", status: "OK" });
 });
 
-// Main app API routing 
+// Meal app API routing 
 app.use("/api/meals", mealRoutes);
+
+// Cart app API routing
+app.use("/api/cart", cartRoutes);
+
+// Order app API routing
+app.use("/api/orders", orderRoutes);
 
 export default app;
