@@ -26,7 +26,6 @@ export class ProviderOrderController {
             if (!status) return res.status(400).json({ success: false, message: "Missing explicit 'status' property in body." });
             if (!id || Array.isArray(id)) return res.status(400).json({ success: false, message: "Missing or invalid order id." });
 
-            // Ensure the incoming status string maps to valid Prisma enum values
             if (!Object.values(OrderStatus).includes(status as OrderStatus)) {
                 return res.status(400).json({ success: false, message: `Invalid status code. options: ${Object.values(OrderStatus).join(", ")}` });
             }

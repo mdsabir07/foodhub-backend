@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 
 export class OrderService {
-    // 🚀 The Checkout Transaction Lifecycle
+    // The Checkout Transaction Lifecycle
     async createOrderFromCart(userId: string, deliveryAddress: string) {
         // 1. Fetch the active cart items along with pricing details
         const cart = await prisma.cart.findUnique({
