@@ -1,5 +1,13 @@
 import { prisma } from "../../lib/prisma";
 
+export interface MealFilterQuery {
+    categoryId?: string;
+    dietaryPreferences?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    search?: string;
+}
+
 export class MealService {
     // Create a new meal (Provider Feature)
     async createMeal(mealData: {
@@ -33,44 +41,92 @@ export class MealService {
     }
 
     // Get all meals with optional filters (Public Feature)
-    async getAllMeals(filters: {
-        categoryId?: string | undefined;
-        isAvailable?: boolean | undefined;
-        search?: string | undefined;
-    }) {
-        const { categoryId, isAvailable, search } = filters;
+    async getAllMeals(filters: MealFilterQuery) {
+        const { categoryId, dietaryPreferences, minPrice, maxPrice, search } = filters;
+        const whereClause: any = {};
+
+        if (categoryId) {
+            whereClause.categoryId = categoryId;
+        }
+
+        if (dietaryPreferences) {
+            whereClause.dietaryPreferences = {
+                equals: dietaryPreferences,
+                mode: "insensitive"
+            };
+        }
+
+        if (minPrice || maxPrice) {
+            whereClause.price = {};
+            if (minPrice) whereClause.price.gte = parseFloat(minPrice);
+            if (maxPrice) whereClause.price.lte = parseFloat(maxPrice);
+        }
+
+        if (search) {
+            whereClause.OR = [
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } }
+            ];
+        }
 
         return await prisma.meal.findMany({
-            where: {
-                ...(categoryId && { categoryId }),
-                ...(isAvailable !== undefined && { isAvailable }),
-                ...(search && {
-                    OR: [
-                        { name: { contains: search, mode: "insensitive" } },
-                        { description: { contains: search, mode: "insensitive" } },
-                    ],
-                }),
-            },
+            where: whereClause,
             include: {
-                category: {
-                    select: {
-                        name: true, slug: true
-                    },
-                },
+                category: true,
+                provider: {
+                    select: { id: true, name: true }
+                }
             },
+            orderBy: { createdAt: "desc" }
         });
+
     }
 
-    // Get a specific meal by ID (Public Feature)
+    // Get detailed singular meal profile card
     async getMealById(id: string) {
-        return await prisma.meal.findUnique({
+        const meal = await prisma.meal.findUnique({
             where: { id },
             include: {
                 category: true,
                 provider: {
                     select: { id: true, name: true, email: true },
                 },
+                reviews: {
+                    include: { customer: { select: { name: true } } }
+                }
             },
+        });
+        if (!meal) throw new Error("Requested meal could not be located.");
+        return meal;
+    }
+
+    // Secure update ensuring meal ownership via userId
+    async updateMeal(mealId: string, providerId: string, data: any) {
+        const existingMeal = await prisma.meal.findFirst({
+            where: {
+                id: mealId,
+                userId: providerId
+            },
+        });
+
+        if (!existingMeal) throw new Error("Meal not found or you don't have permission to modify it.");
+
+        return await prisma.meal.update({
+            where: { id: mealId },
+            data,
+        });
+    }
+
+    // Secure deletion matching ownership rules
+    async deleteMeal(mealId: string, providerId: string) {
+        const existingMeal = await prisma.meal.findFirst({
+            where: { id: mealId, userId: providerId },
+        });
+
+        if (!existingMeal) throw new Error("Meal not found or don't have permission to delete it.");
+
+        return await prisma.meal.delete({
+            where: { id: mealId },
         });
     }
 }
