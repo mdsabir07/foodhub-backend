@@ -10,6 +10,12 @@ const app: Application = express();
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
+const cors = require('cors');
+app.use(cors({
+  origin: 'http://localhost:3000', // Allow your frontend dev server
+  credentials: true                // Critical for your axios withCredentials layout!
+}));
+
 // Middleware
 app.use(express.json());
 
