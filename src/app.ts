@@ -8,16 +8,19 @@ import { providerOrderRoutes } from "./modules/provider/provider-order.router";
 
 const app: Application = express();
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
-
 const cors = require('cors');
 app.use(cors({
   origin: 'http://localhost:3000', // Allow your frontend dev server
-  credentials: true                // Critical for your axios withCredentials layout!
+  credentials: true,                // Critical for your axios withCredentials layout!
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Middleware
 app.use(express.json());
+
+
+app.all("/api/auth/*splat", toNodeHandler(auth));
 
 // Root route for health check
 app.get("/", (_req, res) => {
