@@ -2,33 +2,66 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../../middleware/auth.middleware";
 import { orderService } from "./order.service";
 
+// 📦 Define the interface matching the frontend payload shape exactly
+interface FrontendCartData {
+    items: Array<{ mealId: string; quantity: number; price: number }>;
+    subtotal: number;
+    deliveryFee: number;
+    totalAmount: number;
+}
+
 export class OrderController {
     // POST /api/orders - Checkout active cart
     async checkout(req: AuthenticatedRequest, res: Response) {
         try {
-            const { deliveryAddress } = req.body;
+            if (!req.user) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
 
-            if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
-            if (!deliveryAddress) return res.status(400).json({ success: false, message: "Delivery address is required to place an order." });
+            const { items, subtotal, deliveryFee, totalAmount, deliveryAddress } = req.body;
 
-            const order = await orderService.createOrderFromCart(req.user.id, deliveryAddress);
-            res.status(201).json({ success: true, message: "Order placed successfully", data: order });
+            if (!deliveryAddress) {
+                return res.status(400).json({ success: false, message: "Delivery address is required to place an order." });
+            }
+
+            // Group the financial and item attributes into the matching CartData format
+            const cartData: FrontendCartData = {
+                items,
+                subtotal,
+                deliveryFee,
+                totalAmount
+            };
+
+            // Pass the data cleanly down to your updated transaction layer
+            const order = await orderService.createOrderFromCart(
+                req.user.id,
+                deliveryAddress,
+                cartData
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Order placed successfully",
+                data: order
+            });
         } catch (error: any) {
             console.error("❌ CHECKOUT ERROR:", error);
-            res.status(500).json({ success: false, error: error.message });
+            return res.status(500).json({ success: false, error: error.message });
         }
     }
 
     // GET /api/orders - Get user's order history
     async getHistory(req: AuthenticatedRequest, res: Response) {
         try {
-            if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
+            if (!req.user) {
+                return res.status(401).json({ success: false, message: "Unauthorized" });
+            }
 
             const orders = await orderService.getOrdersByCustomerId(req.user.id);
-            res.status(200).json({ success: true, data: orders });
+            return res.status(200).json({ success: true, data: orders });
         } catch (error: any) {
             console.error("❌ ORDER HISTORY ERROR:", error);
-            res.status(500).json({ success: false, error: error.message });
+            return res.status(500).json({ success: false, error: error.message });
         }
     }
 }
