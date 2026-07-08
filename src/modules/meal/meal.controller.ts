@@ -13,9 +13,11 @@ export class MealController {
                 return;
             }
 
+            // Destructure price out so we can clean it
+            const { name, description, price, image, categoryId } = req.body;
+
             const meal = await mealService.createMeal({
-                ...req.body,
-                userId: providerId
+                name, description, price: parseFloat(price), image, categoryId, userId: providerId
             });
 
             res.status(201).json({ success: true, data: meal });
@@ -74,7 +76,13 @@ export class MealController {
                 return;
             }
 
-            const updatedMeal = await mealService.updateMeal(id, providerId, req.body);
+            // Build update payload and ensure price is fixed if it's being updated
+            const updateData = {...req.body};
+            if(updateData.price) {
+                updateData.price = parseFloat(updateData.price); // Ensure numeric type safety
+            }
+
+            const updatedMeal = await mealService.updateMeal(id, providerId, updateData);
             res.status(200).json({ success: true, data: updatedMeal });
         } catch (error: any) {
             res.status(400).json({ success: false, error: error.message });

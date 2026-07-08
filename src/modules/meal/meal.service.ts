@@ -2,7 +2,6 @@ import { prisma } from "../../lib/prisma";
 
 export interface MealFilterQuery {
     categoryId?: string;
-    dietaryPreferences?: string;
     minPrice?: string;
     maxPrice?: string;
     search?: string;
@@ -42,18 +41,11 @@ export class MealService {
 
     // Get all meals with optional filters (Public Feature)
     async getAllMeals(filters: MealFilterQuery) {
-        const { categoryId, dietaryPreferences, minPrice, maxPrice, search } = filters;
+        const { categoryId, minPrice, maxPrice, search } = filters;
         const whereClause: any = {};
 
         if (categoryId) {
             whereClause.categoryId = categoryId;
-        }
-
-        if (dietaryPreferences) {
-            whereClause.dietaryPreferences = {
-                equals: dietaryPreferences,
-                mode: "insensitive"
-            };
         }
 
         if (minPrice || maxPrice) {
