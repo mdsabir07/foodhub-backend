@@ -1,3 +1,4 @@
+// 📁 app/services/order.service.ts (or your backend location)
 import { prisma } from "../../lib/prisma";
 
 interface FrontendCartData {
@@ -47,9 +48,12 @@ export class OrderService {
             }
 
             // 2. Compute the total cost securely using the fresh DB values
-            const totalAmount = cart.cartItems.reduce((acc: number, current) => {
-                return acc + (current.meal.price * current.quantity);
+            const calculatedTotal = cart.cartItems.reduce((acc: number, current) => {
+                const itemPrice = Number(current.meal.price);
+                return acc + (itemPrice * current.quantity);
             }, 0);
+
+            const totalAmount = parseFloat(calculatedTotal.toFixed(2));
 
             // 3. Complete order processing sequentially
             // A. Generate parent Order record
@@ -57,13 +61,14 @@ export class OrderService {
                 data: {
                     customerId: userId,
                     deliveryAddress,
-                    totalAmount,
+                    totalAmount: parseFloat(totalAmount.toFixed(2)), // 💡 FIX: Force decimal precision compliance
                     status: "PLACED"
                 }
             });
 
             // B. Map permanent history snapshot rows
-            const orderItemsData = cart.cartItems.map((item: typeof cart.cartItems[0]) => ({
+            // 💡 FIX: Removed the buggy inline 'typeof' assertion to allow natural typing inference
+            const orderItemsData = cart.cartItems.map((item) => ({
                 orderId: order.id,
                 mealId: item.mealId,
                 quantity: item.quantity,
@@ -79,7 +84,7 @@ export class OrderService {
                 where: { cartId: cart.id }
             });
 
-            // Return hydrated data payload
+            // Return hydrated data payload back to the express response controller
             return tx.order.findUnique({
                 where: { id: order.id },
                 include: {

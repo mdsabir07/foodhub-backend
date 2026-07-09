@@ -18,6 +18,8 @@ export class OrderController {
                 return res.status(401).json({ success: false, message: "Unauthorized" });
             }
 
+            console.log("📥 RECEIVED CHECKOUT BODY:", JSON.stringify(req.body, null, 2));
+
             const { items, subtotal, deliveryFee, totalAmount, deliveryAddress } = req.body;
 
             if (!deliveryAddress) {
@@ -26,10 +28,14 @@ export class OrderController {
 
             // Group the financial and item attributes into the matching CartData format
             const cartData: FrontendCartData = {
-                items,
-                subtotal,
-                deliveryFee,
-                totalAmount
+                items: items.map((item: any) => ({
+                    mealId: item.mealId,
+                    quantity: parseInt(item.quantity, 10),
+                    price: parseFloat(Number(item.price).toFixed(2)) // Force exactly 2 decimal places
+                })),
+                subtotal: parseFloat(Number(subtotal).toFixed(2)),
+                deliveryFee: parseFloat(Number(deliveryFee).toFixed(2)),
+                totalAmount: parseFloat(Number(totalAmount).toFixed(2))
             };
 
             // Pass the data cleanly down to your updated transaction layer
