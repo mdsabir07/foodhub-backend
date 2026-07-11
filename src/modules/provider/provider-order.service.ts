@@ -4,14 +4,14 @@ import { prisma } from "../../lib/prisma";
 export class ProviderOrderService {
     // 1. Fetch all orders that contain a meal belonging to this provider
     async getIncomingOrders(providerId: string) {
+        // providerId is the Better-Auth logged-in user id.
+        // In Prisma, a Meal belongs to a provider via `Meal.userId`.
         return await prisma.order.findMany({
             where: {
                 orderItems: {
                     some: {
                         meal: {
-                            provider: {
-                                id: providerId,
-                            },
+                            userId: providerId,
                         },
                     },
                 },
@@ -20,21 +20,21 @@ export class ProviderOrderService {
                 orderItems: {
                     where: {
                         meal: {
-                            provider: {
-                                id: providerId,
-                            },
+                            userId: providerId,
                         },
                     },
                     include: { meal: true },
                 },
                 customer: {
                     select: {
-                        id: true, name: true, email: true
+                        id: true,
+                        name: true,
+                        email: true,
                     },
                 },
             },
-            orderBy: { createdAt: "desc" }
-        })
+            orderBy: { createdAt: "desc" },
+        });
     }
 
     // 2. Safely mutate the status flag of an order
@@ -46,9 +46,7 @@ export class ProviderOrderService {
                 orderItems: {
                     some: {
                         meal: {
-                            provider: {
-                                id: providerId,
-                            },
+                            userId: providerId,
                         },
                     },
                 },
@@ -67,3 +65,4 @@ export class ProviderOrderService {
 }
 
 export const providerOrderService = new ProviderOrderService();
+

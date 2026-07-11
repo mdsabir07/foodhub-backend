@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { auth } from "../lib/auth";
+import { prisma } from "../lib/prisma";
 
 // Extend Express Request type to include the authenticated user context
 export interface AuthenticatedRequest extends Request {
@@ -25,6 +26,21 @@ export const requireAuth = async (
             return res.status(401).json({
                 success: false,
                 message: "Unauthorized: Please sign in to access this resource."
+            });
+        }
+
+        // 🛡️ REAL-TIME SUSPENSION CHECK
+        // Query the database to verify if this user account has been suspended by an admin
+        // Cast 'prisma.user' as 'any' to bypass local type-caching mismatch until client is regenerated
+        const dbUser = await (prisma.user as any).findUnique({
+            where: { id: session.user.id },
+            select: { isSuspended: true }
+        });
+
+        if (dbUser?.isSuspended) {
+            return res.status(403).json({
+                success: false,
+                message: "Access Denied: Your account has been suspended by the administrator."
             });
         }
 

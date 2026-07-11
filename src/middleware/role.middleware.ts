@@ -1,6 +1,5 @@
 import { NextFunction, Response } from "express"
 import { AuthenticatedRequest } from "./auth.middleware"
-import { success } from "better-auth"
 
 export const requireRole = (...allowedRoles: string[]) => {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

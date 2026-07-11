@@ -10,6 +10,7 @@ import { mealRoutes } from "./modules/meal/meal.router";
 import { cartRoutes } from "./modules/cart/cart.router";
 import { orderRoutes } from "./modules/order/order.router";
 import { providerOrderRoutes } from "./modules/provider/provider-order.router";
+import { adminRoutes } from "./modules/admin/admin.router";
 
 const app: Application = express();
 
@@ -38,5 +39,6 @@ app.use("/api/meals", mealRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/provider/orders", providerOrderRoutes);
+app.use("/api/admin", adminRoutes); // Admin routes for user management and administrative tasks
 
 export default app;
