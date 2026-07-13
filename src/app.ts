@@ -16,7 +16,7 @@ const app: Application = express();
 
 // Cross-Origin Resource Sharing (CORS) Configuration
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "https://dishmarket-psi.vercel.app",
   credentials: true, // Required for Better-Auth secure session cookie transmission
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
