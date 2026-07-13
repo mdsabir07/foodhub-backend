@@ -14,6 +14,18 @@ export const requireAuth = async (
     next: NextFunction
 ) => {
     try {
+        // 🔓 CORS PREFLIGHT BYPASS: Always allow HTTP OPTIONS requests to pass through untouched
+        if (req.method === "OPTIONS") {
+            return next();
+        }
+
+        // 🔓 PUBLIC PATH BYPASS: Bypass authentication checks for login, register, and all Better-Auth endpoints
+        // Normalizing pathing values to lowercase protects against bypass evasion or case mismatches
+        const currentPath = (req.originalUrl || req.url || "").toLowerCase();
+        if (currentPath.includes("/api/auth") || currentPath.includes("/auth")) {
+            return next();
+        }
+
         // Better Auth automatically parses cookie/headers from the incoming Node Request Object
         const session = await auth.api.getSession({
             headers: {
@@ -29,7 +41,6 @@ export const requireAuth = async (
             });
         }
 
-        // 🛡️ REAL-TIME SUSPENSION CHECK
         // Query the database to verify if this user account has been suspended by an admin
         // Cast 'prisma.user' as 'any' to bypass local type-caching mismatch until client is regenerated
         const dbUser = await (prisma.user as any).findUnique({
