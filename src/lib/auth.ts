@@ -31,7 +31,6 @@ export const auth = betterAuth({
             }
         }
     },
-    // 🔐 Type-Safe Session Cookie Settings
     cookies: {
         sessionToken: {
             attributes: {
