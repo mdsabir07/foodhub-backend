@@ -19,7 +19,8 @@ app.use(cors({
   origin: "https://dishmarket-psi.vercel.app",
   credentials: true, // Required for Better-Auth secure session cookie transmission
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  // Added "X-Requested-With" and "Accept" to prevent browser blocking
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
 }));
 
 // Body Parsing Middleware
