@@ -8,6 +8,7 @@ export const auth = betterAuth({
     }),
     trustedOrigins: [
         "http://localhost:3000",
+        "https://dishmarket-psi.vercel.app",
         process.env.BETTER_AUTH_TRUSTED_ORIGINS || ""
     ].filter(Boolean),
     emailAndPassword: {
@@ -25,9 +26,15 @@ export const auth = betterAuth({
     cookies: {
         sessionToken: {
             attributes: {
-                sameSite: "none" as const, // 💡 Adding 'as const' ensures TypeScript compiles successfully
+                sameSite: "none" as const,
                 secure: true
             }
+        }
+    },
+    // 🔐 ENFORCE CROSS-DOMAIN SESSION STORAGE
+    advanced: {
+        crossSubDomainCookies: {
+            enabled: true
         }
     }
 });
