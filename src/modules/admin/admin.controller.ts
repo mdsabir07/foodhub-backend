@@ -48,7 +48,7 @@ export const updateUserStatus = async (req: AuthenticatedRequest, res: Response)
         }
 
         // Execute dynamic database write through Service
-        const updatedUser = await adminService.toggleUserSuspension(id, isSuspended);
+        const updatedUser = await adminService.toggleUserSuspension(id as string, isSuspended);
 
         return res.status(200).json({
             success: true,
