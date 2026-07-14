@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx tsx watch src/server.ts"
+    "dev": "npx tsx watch src/server.ts",
+    "build": "tsc"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -15,6 +16,7 @@
   "license": "ISC",
   "packageManager": "pnpm@11.12.0",
   "devDependencies": {
+    "@prisma/config": "^7.8.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.0.1",
