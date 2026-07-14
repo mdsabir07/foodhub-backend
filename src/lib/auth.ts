@@ -30,11 +30,5 @@ export const auth = betterAuth({
                 secure: true
             }
         }
-    },
-    // 🔐 ENFORCE CROSS-DOMAIN SESSION STORAGE
-    advanced: {
-        crossSubDomainCookies: {
-            enabled: true
-        }
     }
 });
