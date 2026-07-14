@@ -21,11 +21,12 @@ export const auth = betterAuth({
             }
         }
     },
-    // 🔐 REQUIRED FOR SECURE CROSS-DOMAIN PRODUCTION COOKIES
-    advanced: {
-        defaultCookieAttributes: {
-            sameSite: "none",
-            secure: true
+    cookies: {
+        sessionToken: {
+            attributes: {
+                sameSite: "none",
+                secure: true
+            }
         }
     }
 })
