@@ -15,12 +15,21 @@ import { adminRoutes } from "./modules/admin/admin.router";
 const app: Application = express();
 
 // Cross-Origin Resource Sharing (CORS) Configuration
+const corsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: "https://dishmarket-psi.vercel.app",
+  origin: (origin, callback) => {
+    // allow non-browser requests (no origin)
+    if (!origin) return callback(null, true);
+    if (corsOrigins.length === 0) return callback(null, true);
+    return callback(null, corsOrigins.includes(origin));
+  },
   credentials: true, // Required for Better-Auth secure session cookie transmission
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  // Added "X-Requested-With" and "Accept" to prevent browser blocking
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 }));
 
 // Body Parsing Middleware
