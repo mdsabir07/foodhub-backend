@@ -23,9 +23,9 @@ export const auth = betterAuth({
     },
     // 🔐 REQUIRED FOR SECURE CROSS-DOMAIN PRODUCTION COOKIES
     advanced: {
-        cookies: {
+        defaultCookieAttributes: {
             sameSite: "none",
             secure: true
-        } as any
+        }
     }
 })
