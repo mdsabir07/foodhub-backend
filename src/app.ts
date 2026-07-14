@@ -31,7 +31,7 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 
 // Global API Health Check Route
 app.get("/", (_req, res) => {
-  res.json({ message: "FoodHub API is running", status: "OK" });
+  res.json({ message: "DishMarket API is running", status: "OK" });
 });
 
 // Application Resource Mounting Points
