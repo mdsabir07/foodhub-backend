@@ -21,12 +21,13 @@ export const auth = betterAuth({
             }
         }
     },
+    // 🔐 Type-Safe Session Cookie Settings
     cookies: {
         sessionToken: {
             attributes: {
-                sameSite: "none",
+                sameSite: "none" as const, // 💡 Adding 'as const' ensures TypeScript compiles successfully
                 secure: true
             }
         }
     }
-})
+});
