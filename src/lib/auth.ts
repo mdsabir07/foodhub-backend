@@ -6,7 +6,10 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql"
     }),
-    trustedOrigins: ["http://localhost:3000"],
+    trustedOrigins: [
+        "http://localhost:3000",
+        process.env.BETTER_AUTH_TRUSTED_ORIGINS || ""
+    ].filter(Boolean),
     emailAndPassword: {
         enabled: true
     },
@@ -17,5 +20,12 @@ export const auth = betterAuth({
                 defaultValue: "CUSTOMER"
             }
         }
+    },
+    // 🔐 REQUIRED FOR SECURE CROSS-DOMAIN PRODUCTION COOKIES
+    advanced: {
+        cookies: {
+            sameSite: "none",
+            secure: true
+        } as any
     }
 })
