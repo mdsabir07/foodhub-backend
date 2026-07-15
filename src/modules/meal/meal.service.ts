@@ -67,7 +67,8 @@ export class MealService {
                 category: true,
                 provider: {
                     select: { id: true, name: true }
-                }
+                },
+                reviews: true
             },
             orderBy: { createdAt: "desc" }
         });
