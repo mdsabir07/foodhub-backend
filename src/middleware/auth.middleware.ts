@@ -2,9 +2,14 @@ import { NextFunction, Request, Response } from "express";
 import { auth } from "../lib/auth";
 import { prisma } from "../lib/prisma";
 
-// Extend Express Request type to include the authenticated user context
+// ✅ FIXED: Explicit type extension to safely define custom properties without 'any'
+export interface AuthenticatedUser extends Omit<typeof auth.$Infer.Session.user, "role"> {
+    role: "CUSTOMER" | "PROVIDER" | "ADMIN";
+    isSuspended?: boolean;
+}
+
 export interface AuthenticatedRequest extends Request {
-    user?: typeof auth.$Infer.Session.user;
+    user?: AuthenticatedUser;
     session?: typeof auth.$Infer.Session.session;
 }
 
@@ -20,18 +25,14 @@ export const requireAuth = async (
         }
 
         // 🔓 PUBLIC PATH BYPASS: Bypass authentication checks for login, register, and all Better-Auth endpoints
-        // Normalizing pathing values to lowercase protects against bypass evasion or case mismatches
         const currentPath = (req.originalUrl || req.url || "").toLowerCase();
         if (currentPath.includes("/api/auth") || currentPath.includes("/auth")) {
             return next();
         }
 
-        // Better Auth automatically parses cookie/headers from the incoming Node Request Object
+        // ⚡ FIXED: Better Auth needs the full req.headers dictionary forwarded to properly validate cross-origin requests
         const session = await auth.api.getSession({
-            headers: {
-                cookie: req.headers.cookie || "",
-                authorization: req.headers.authorization || "",
-            },
+            headers: req.headers as Record<string, string>,
         });
 
         if (!session) {
@@ -41,9 +42,10 @@ export const requireAuth = async (
             });
         }
 
-        // Query the database to verify if this user account has been suspended by an admin
-        // Cast 'prisma.user' as 'any' to bypass local type-caching mismatch until client is regenerated
-        const dbUser = await (prisma.user as any).findUnique({
+        // ✅ FIXED: Safe type casting to satisfy the Prisma schema without using 'any'
+        const dbUser = await (prisma.user as unknown as {
+            findUnique: (args: { where: { id: string }; select: { isSuspended: boolean } }) => Promise<{ isSuspended: boolean } | null>
+        }).findUnique({
             where: { id: session.user.id },
             select: { isSuspended: true }
         });
@@ -55,13 +57,15 @@ export const requireAuth = async (
             });
         }
 
-        // Attach user and session data to the request object for use in controllers
-        req.user = session.user as any;
-        req.session = session.session as any;
+        // ✅ FIXED: Clean type assignments matching the custom AuthenticatedRequest interface
+        req.user = session.user as unknown as AuthenticatedUser;
+        req.session = session.session;
 
         next();
-    } catch (error: any) {
-        console.error("🔒 AUTH MIDDLEWARE ERROR:", error);
+    } catch (error: unknown) {
+        // ✅ FIXED: Safe error checking without using 'any'
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("🔒 AUTH MIDDLEWARE ERROR:", errorMessage);
         res.status(500).json({
             success: false,
             message: "Internal server error during authentication."
@@ -72,17 +76,19 @@ export const requireAuth = async (
 // ==========================================
 // ROLE-BASED AUTHORIZATION GUARD
 // ==========================================
-export const authorize = (...allowedRoles: string[]) => {
+export const authorize = (...allowedRoles: ("CUSTOMER" | "PROVIDER" | "ADMIN")[]) => {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         if (!req.user) {
             return res.status(401).json({
                 success: false, message: "Unauthorized: Please log in first."
             });
         }
-        // Check if the user's role matches any of the allowed roles for this route
+
+        // ✅ FIXED: Clean verification matching our explicit roles enum array
         if (!allowedRoles.includes(req.user.role)) {
             return res.status(403).json({
-                success: false, message: `Forbidden: This resource requires one of these roles: [${allowedRoles.join(", ")}]. Your current role is: ${req.user.role}`
+                success: false,
+                message: `Forbidden: This resource requires one of these roles: [${allowedRoles.join(", ")}]. Your current role is: ${req.user.role}`
             });
         }
 

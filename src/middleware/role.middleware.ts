@@ -1,7 +1,10 @@
-import { NextFunction, Response } from "express"
-import { AuthenticatedRequest } from "./auth.middleware"
+import { NextFunction, Response } from "express";
+import { AuthenticatedRequest } from "./auth.middleware";
 
-export const requireRole = (...allowedRoles: string[]) => {
+// ==========================================================
+// CUSTOM ROLE VERIFICATION GUARD
+// ==========================================================
+export const requireRole = (...allowedRoles: ("CUSTOMER" | "PROVIDER" | "ADMIN")[]) => {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         // 1. Ensure the user is actually attached to the request (safety check)
         if (!req.user) {
@@ -22,5 +25,5 @@ export const requireRole = (...allowedRoles: string[]) => {
 
         // 3. If they pass the check, move to the controller!
         next();
-    }
-}
+    };
+};
