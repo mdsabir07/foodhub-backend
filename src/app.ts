@@ -25,10 +25,17 @@ app.use(cors({
     // allow non-browser requests (no origin)
     if (!origin) return callback(null, true);
     if (corsOrigins.length === 0) return callback(null, true);
-    return callback(null, corsOrigins.includes(origin));
+
+    // Fallback comparison strategy
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
   },
   credentials: true, // Required for Better-Auth secure session cookie transmission
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  // ✅ FIXED: Added "PATCH" to allowed methods for user suspension status updates
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 }));
 
